@@ -11,14 +11,23 @@ let data: IMessageMutation[] = [];
 const messagesDb = {
 
     async init() {
-        // data = [];
-        const messages = await fs.readFile(pathName);
-        data = JSON.parse(messages.toString())
-
-        console.log(data)
+        try {
+            await fs.access(dir);
+            const messages = await fs.readFile(pathName);
+            data = JSON.parse(messages.toString())
+        } catch (e) {
+            await fs.mkdir(dir);
+            await fs.writeFile(pathName, JSON.stringify([]));
+        }
     },
 
-    async getMessages() {
+    async getMessages(date: string | undefined) {
+        if(date) {
+            const index = data.findIndex(i => i.created_at === date)
+
+            return data.slice(index + 1)
+        }
+
         return data;
     },
 
@@ -27,14 +36,11 @@ const messagesDb = {
 
         const mutated: IMessageMutation = {
             id: uuid(),
-            created_at: date.toString(),
+            created_at: date.toJSON(),
             ...message
         }
-        console.log(22222, data)
 
         data.push(mutated)
-
-        console.log(55555, data)
         await this.save()
         await this.init()
 
@@ -42,27 +48,8 @@ const messagesDb = {
     },
 
     async save() {
-        try {
-            await fs.access(dir);
-            await fs.writeFile(pathName, JSON.stringify(data));
-        } catch (e) {
-            await fs.mkdir(pathName);
-            await fs.writeFile(pathName, JSON.stringify(data));
-        }
+        await fs.writeFile(pathName, JSON.stringify(data));
     },
-    async delete(id: string) {
-        // try {
-        //     await fs.unlink(pathName + '/' + id + '.txt');
-        //     await this.init();
-        //
-        //     return `File ${id} was deleted`;
-        // } catch (e) {
-        //     console.error(e);
-        // }
-    }
-
-
-
 };
 
 export default messagesDb;

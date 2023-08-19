@@ -7,10 +7,8 @@ const messagesRouter = express.Router();
 messagesRouter.get('', async (req, res) => {
     const{query} = req;
 
-    console.log(query)
-
     res.send({
-        result: 'sss'
+        data: await messagesDb.getMessages(query.date as string | undefined)
     });
 })
 
